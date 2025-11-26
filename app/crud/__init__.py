@@ -1,1 +1,1 @@
-from .file import get_file, create_file
+from .file import get_file, create_file, update_file_status, update_file_thumbnail

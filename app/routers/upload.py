@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, status, HTTPException, Path
+from fastapi import APIRouter, UploadFile, File, Depends, status, HTTPException, Path, BackgroundTasks
 from fastapi.responses import FileResponse
 
 from typing import Annotated
@@ -10,6 +10,7 @@ import os
 from app.db import get_db
 from app.core import get_bytes_hash
 from app.crud import get_file, create_file
+from app.utils import process_file
 
 
 UPLOAD_DIR = Path("uploads")
@@ -24,6 +25,7 @@ router = APIRouter(
 async def upload_file(
     file: Annotated[UploadFile, File()],
     db: Annotated[AsyncSession, Depends(get_db)],
+    background_tasks: BackgroundTasks,
     user: int = 1,
 ) -> dict[str, str]:
 
@@ -58,7 +60,13 @@ async def upload_file(
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    await create_file(db, file_hash, file.filename, str(file_path), user)
+    file_db = await create_file(db, file_hash, file.filename, str(file_path), user)
+    
+    if file_db:
+        background_tasks.add_task(
+            process_file,
+            str(file_path), file_db.id, db
+        )
 
     return {
         "hash": file_hash,

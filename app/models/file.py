@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import Integer, String, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,4 +15,9 @@ class File(Base):
     filename: Mapped[str] = mapped_column(String(255))
     path: Mapped[str] = mapped_column(String(500))
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    processed: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    processing_status: Mapped[str] = mapped_column(String(20), server_default="pending")
+    thumbnail_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

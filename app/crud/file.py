@@ -28,3 +28,34 @@ async def get_file(db: AsyncSession, file_hash: str):
         "hash": file_hash
     })
     return result.mappings().first()
+
+async def update_file_status(db: AsyncSession, id: int, processing_status: str, processed: bool):
+    stm = text("""
+        UPDATE files
+        SET processing_status = :processing_status, processed = :processed
+        WHERE id = :id 
+        RETURNING *
+    """)
+
+    result = await db.execute(statement=stm, params={
+        "id": id,
+        "processing_status": processing_status,
+        "processed": processed
+    })
+    await db.commit()
+    return result.mappings().first()
+
+async def update_file_thumbnail(db: AsyncSession, id: int, thumbnail_path: str):
+    stm = text("""
+        UPDATE files
+        SET thumbnail_path = :thumbnail_path
+        WHERE id = :id 
+        RETURNING *
+    """)
+
+    result = await db.execute(statement=stm, params={
+        "id": id,
+        "thumbnail_path": thumbnail_path
+    })
+    await db.commit()
+    return result.mappings().first()
